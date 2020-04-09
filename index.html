@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <script src="script.js" charset="utf-8"></script>
+<style>
+ol {
+  counter-reset: stepNum;
+}
+
+li.action::before {
+  counter-increment: stepNum;
+  content: "Step " counter(stepNum) " ";
+  width: 80px;
+  color: #777777;
+}
+.flexy {display: flex}
+.growy {flex-grow: 8}
+tr.param.alternate {background: #c0c0f0}
+tr.param.alternate:nth-child(odd) {background: #a0a0f0}
+
+li.action.alternate {background: #f0f0f0}
+li.action.alternate:nth-child(odd) {background: #e0e0e0}
+li.action {font-size: 1.5em}
+</style>
+  </head>
+  <body style="display: flex">
+    <div style="width: 420">
+      <canvas id="graphArea" width="400" height="400" style="border:3px solid #000000;"></canvas>
+    </div>
+    <div style="width: 700">
+      <!--<button id="refreshButton" onclick="refreshActionSequenceDisplay()">Refresh</button>-->
+      <ol id="actionList" class="alternate"></ol>
+      <button id="runButton" onclick="runButton()">Run!</button>
+      <button onclick="popButton()">Pop</button>
+      <button onclick="pushButton()">Push nop</button>
+      <br>
+      <ul id="contextEntryList"></ul>
+      <br>
+      <button onclick="clearButton()">Clear</button>
+      <input type="checkbox" id="mutebox">Mute</input>
+      <p>Loaded Actions:</p>
+      <ul id="knownActionList"></ul>
+      <textarea style = "width: 30px; height: 30px" id="actionSeqDump"></textarea>
+      <br>
+      <input id="saveNameBox" type="text" value="patch.json"></input>
+      <a href="" id="savelink">Save</a>
+      <div id="openFileDiv"><input type="file" id="openFileUpload"></div>
+      <button onclick="reloadFileButton()">Reload File</button>
+    </div>
+    <div style="border: 2px navy solid; flex-grow: 1">
+      <span>Step Editor</span>
+      <button onclick="updateButton()">Update</button>
+      <button onclick="insertButton()">Insert</button>
+      <button onclick="deleteButton()">Delete</button>
+      <input type="checkbox" id="copybox"></input>
+      <br>
+      <input id="stepEditIdBox" type="text"></input>
+      <ul id="paramEditList"></ul>
+    </div>
+  </body>
+</html>

@@ -186,6 +186,15 @@ knownActions["muDots"] = {params:["mu(x)"], act: (params,ctx) => {
   })
 }}
 
+knownActions["applyFunc"] = {params:["f(y)"], act: (params,ctx) => {
+  var f = eval("y => (" + params["f(y)"] + ")")
+  return ctx.map(pt => {
+    pt.y = f(pt.y)
+    return pt
+  })
+}}
+
+
 knownActions["harmonics"] = {params:["f0","n"], act: (params,ctx) => {
   var fund = eval(params["f0"])
   var numHarmonics = eval(params["n"])
@@ -207,6 +216,37 @@ knownActions["kern"] = {params:["kernel"], act: (params,ctx) => {
     kernel.forEach(k => {
       newctx.push({x: pt.x + k.x, y: pt.y * k.y})
     })
+  })
+  return newctx
+}}
+
+knownActions["kerncmag"] = {params:["kernelRe","kernelIm"], act: (params,ctx) => {
+  var outRe = knownActions["kern"].act({kernel: params["kernelRe"]},ctx)
+  var outIm = knownActions["kern"].act({kernel: params["kernelIm"]},ctx)
+
+  var summedRe = knownActions["sumDeltas"].act({eps: 0.01},outRe)
+  var summedIm = knownActions["sumDeltas"].act({eps: 0.01},outIm)
+
+  var sqRe = knownActions["applyFunc"].act({"f(y)": "y*y"},summedRe)
+  var sqIm = knownActions["applyFunc"].act({"f(y)": "y*y"},summedIm)
+
+  var bothSq = sqRe + sqIm
+
+  return knownActions["sumDeltas"].act({eps: 0.01},bothSq)
+}}
+
+knownActions["sumDeltas"] = {params:["eps"],act: (params,ctx) => {
+  var eps = eval(params["eps"])
+  var newctx = []
+  var xvals = ctx.map(pt => pt.x)
+  xvals.forEach(thisX => {
+    var sum = 0
+    ctx.forEach(pt => {
+      if(eps > Math.abs(pt.x - thisX)){
+        sum += pt.y
+      }
+    })
+    newctx.push({x: thisX, y: sum})
   })
   return newctx
 }}
@@ -246,9 +286,10 @@ knownActions["samplef"] = {params:["f(x)","dt","t0","tf"], act: (params,ctx) => 
   return output
 }}
 
-knownActions["chop"] = {params:["time"], act: (params,ctx) => {
-  var chopTime = eval(params["time"])
-  return ctx.filter(pt => pt.x < chopTime)
+knownActions["chop"] = {params:["t0","tf"], act: (params,ctx) => {
+  var startTime = eval(params["t0"])
+  var endTime = eval(params["tf"])
+  return ctx.filter(pt => pt.x < endTime && pt.x > startTime)
 }}
 
 knownActions["listen"] = {act: (params,ctx) => {
@@ -386,4 +427,4 @@ function mod(n, m) {
 }
 document.addEventListener('keyup', evt => {
 }, false);
-activeActionSequence = [{"id":"harmonics","params":{"f0":"1","n":"15"}},{"id":"kern","params":{"kernel":"sequence([{\"id\":\"samplef\",\"params\":{\"f(x)\":\"Math.exp(-0.5*x*x)\",\"dt\":\"0.2\",\"t0\":\"-0.4\",\"tf\":\"0.4\"}}])"}},{"id":"rescalex","params":{"factor":"440"}},{"id":"muDots","params":{"mu(x)":"1/(x*x)"}},{"id":"isft","params":{"dt":"1/48000","time":"3","phaseSlope":"1"}},{"id":"normalizeAudio"},{"id":"listen"},{"id":"normalizeDeltas"},{"id":"chop","params":{"time":"0.02"}},{"id":"scatterCtx"},{"id":"nop"}]
+activeActionSequence = [{"id":"harmonics","params":{"f0":"1","n":"15"}},{"id":"kern","params":{"kernel":"sequence([{\"id\":\"samplef\",\"params\":{\"f(x)\":\"Math.exp(-0.5*x*x)\",\"dt\":\"0.2\",\"t0\":\"-0.4\",\"tf\":\"0.4\"}}])"}},{"id":"rescalex","params":{"factor":"440"}},{"id":"muDots","params":{"mu(x)":"1/(x*x)"}},{"id":"isft","params":{"dt":"1/48000","time":"3","phaseSlope":"1"}},{"id":"normalizeAudio"},{"id":"listen"},{"id":"normalizeDeltas"},{"id":"chop","params":{"t0":"0","tf":"0.02"}},{"id":"scatterCtx"},{"id":"nop"}]
